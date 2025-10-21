@@ -1,187 +1,201 @@
 openapi: 3.1.0
 info:
-  title: Pet Management API
-  description: A Simple RESTful API for managing your pets.
-  version: 1.0.0
+    title: Pet Management API
+    description: A Simple RESTful API for managing your pets.
+    version: 1.0.0
 servers:
-  - url: 'http://localhost:3000/api'
-    description: 'Local Server'
-  - url: 'https://api.example.com/api'
-    description: 'Production Server'
+    - url: "http://localhost:3000/api"
+      description: "Local Server"
+    - url: "https://api.example.com/api"
+      description: "Production Server"
+security:
+    - BearerAuth: []
 paths:
-  /users:
-    post:
-      summary: create a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserInput'
-      responses:
-        201:
-          description: user created successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/UserResponse'
-        409:
-          description: username is already exists
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: string
-                    example: username already registered
-  /users/login:
-    post:
-      summary: login using user account
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        200:
-          description: success login
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: object
-                    properties:
-                      token:
-                        type: string
-                        example: unique-token
-        400:
-          description: wrong credential
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: string
-                    example: username or password is wrong
-  /users/current:
-    patch:
-      summary: update user info
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateUser'
-      responses:
-        200:
-          description: successfully update user info
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/UserResponse'
-        400:
-          description: failed to update user info
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: string
-                    example: name length max is 100
-    get:
-      summary: get current user info
-      responses:
-        200:
-          description: user info retrieved
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    $ref: '#/components/schemas/UserResponse'
-        401:
-          description: unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: string
-                    example: unauthorized
-  /users/logout:
-    delete:
-      summary: logout from session
-      responses:
-        200:
-          description: successfully logout
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: string
-                    example: OK
-        401:
-          description: unauthorized
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  errors:
-                    type: string
-                    example: unauthorized
+    /users:
+        post:
+            tags:
+                - User
+            summary: create a new user
+            requestBody:
+                $ref: "#/components/requestBodies/CreateUserRequest"
+            responses:
+                201:
+                    description: user created successfully
+                    $ref: "#/components/responses/UserResponse"
+                409:
+                    description: conflict data
+                    $ref: "#/components/responses/ErrorResponse"
+    /users/login:
+        post:
+            tags:
+                - User
+            summary: login using user account
+            requestBody:
+                $ref: "#/components/requestBodies/LoginUserRequest"
+            responses:
+                200:
+                    description: success login
+                    $ref: "#/components/responses/TokenResponse"
+                400:
+                    description: wrong credential
+                    $ref: "#/components/responses/ErrorResponse"
+    /users/current:
+        patch:
+            tags:
+                - User
+            summary: update user info
+            requestBody:
+                $ref: "#/components/requestBodies/UpdateUserRequest"
+            responses:
+                200:
+                    description: success update user
+                    $ref: "#/components/responses/UserResponse"
+                400:
+                    description: failed to update user info
+                    $ref: "#/components/responses/ErrorResponse"
+        get:
+            tags:
+                - User
+            summary: get current user info
+            responses:
+                200:
+                    $ref: "#/components/responses/UserResponse"
+                401:
+                    $ref: "#/components/responses/ErrorResponse"
+    /users/logout:
+        delete:
+            tags:
+                - User
+            summary: logout from session
+            responses:
+                200:
+                    description: successfully logout
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    data:
+                                        type: string
+                                        example: OK
+                401:
+                    $ref: "#/components/responses/ErrorResponse"
 components:
-  schemas:
-    UserInput:
-      type: object,
-      properties:
-        username:
-          type: string
-          example: john123
-        password:
-          type: string
-          example: password123
-        name:
-          type: string
-          example: John
-    UserResponse:
-      type: object,
-      properties:
-        username:
-          type: string
-          example: john123
-        name:
-          type: string
-          example: John
-    LoginRequest:
-      properties:
-        username:
-          type: string
-          example: john123
-        password:
-          type: string
-          example: password123
-    UpdateUser:
-      properties:
-        name:
-          type: string
-          example: John
-        password:
-          type: string
-          example: newpassword123
+    schemas:
+        User:
+            type: object
+            properties:
+                username:
+                    type: string
+                    example: john123
+                password:
+                    type: string
+                    example: password123
+                name:
+                    type: string
+                    example: John
+        Pet:
+            type: object
+            properties:
+                name:
+                    type: string
+                    example: doggy
+                species:
+                    type: string
+                    example: dog
+                breed:
+                    type: string
+                    example: husky
+                birth_date:
+                    type: string
+                    example: 2025-01-01
+    requestBodies:
+        CreateUserRequest:
+            description: request body for create user
+            required: true
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                                example: john123
+                            password:
+                                type: string
+                                example: password123
+                            name:
+                                type: string
+                                example: John
+        LoginUserRequest:
+            description: request body for login
+            required: true
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            username:
+                                type: string
+                                example: john123
+                            password:
+                                type: string
+                                example: password123
+        UpdateUserRequest:
+            description: request body for updating user info
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            name:
+                                type: string
+                                example: Johny
+                            password:
+                                type: string
+                                example: newpassword123
+    responses:
+        UserResponse:
+            description: user info response
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            data:
+                                type: object
+                                properties:
+                                    username:
+                                        type: string
+                                        example: john123
+                                    name:
+                                        type: string
+                                        example: Johny
+        ErrorResponse:
+            description: "error response"
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            errors:
+                                type: string
+                                example: error message
+        TokenResponse:
+            description: jwt token info
+            content:
+                application/json:
+                    schema:
+                        type: object
+                        properties:
+                            data:
+                                type: object
+                                properties:
+                                    token:
+                                        type: string
+                                        example: unique-token
+    securitySchemes:
+        BearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWTAuth
