@@ -1,0 +1,49 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  username String @id @db.VarChar(100)
+  password String @db.VarChar(100)
+  name String @db.VarChar(100)
+  token String? @db.VarChar(100)
+  pets Pet[]
+
+  @@map("users")
+}
+
+model Pet {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(100)
+  species String @db.VarChar(100)
+  breed String @db.VarChar(100)
+  birth_date DateTime
+  username String @db.VarChar(100)
+  user User @relation(fields: [username], references: [username])
+  pet_records PetRecord[]
+
+  @@map("pets")
+}
+
+model PetRecord {
+  id Int @id @default(autoincrement())
+  record_type String @db.VarChar(100)
+  description String @db.VarChar(255)
+  record_date DateTime
+  petId Int
+  pet Pet @relation(fields: [petId], references: [id])
+
+  @@map("pet_records")
+}

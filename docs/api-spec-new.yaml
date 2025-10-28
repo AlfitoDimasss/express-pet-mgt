@@ -1,0 +1,469 @@
+openapi: 3.1.0
+info:
+  title: Pet Management API
+  description: A simple RESTful API for managing pets and their records.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://api.example.com/api
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: User
+    description: Operations related to user accounts and authentication
+  - name: Pet
+    description: Operations for managing pet data
+  - name: Pet Record
+    description: Operations for managing pet record history
+
+paths:
+  /users:
+    post:
+      tags: [User]
+      summary: Create a new user
+      requestBody:
+        $ref: "#/components/requestBodies/CreateUserRequest"
+      responses:
+        "201":
+          description: User created successfully
+          $ref: "#/components/responses/UserResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+
+  /users/login:
+    post:
+      tags: [User]
+      summary: Login using user account
+      requestBody:
+        $ref: "#/components/requestBodies/LoginUserRequest"
+      responses:
+        "200":
+          description: Successful login
+          $ref: "#/components/responses/TokenResponse"
+        "400":
+          description: Invalid credentials
+          $ref: "#/components/responses/ErrorResponse"
+
+  /users/current:
+    get:
+      tags: [User]
+      summary: Get current user info
+      responses:
+        "200":
+          $ref: "#/components/responses/UserResponse"
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+    patch:
+      tags: [User]
+      summary: Update current user info
+      requestBody:
+        $ref: "#/components/requestBodies/UpdateUserRequest"
+      responses:
+        "200":
+          description: Successfully updated user info
+          $ref: "#/components/responses/UserResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+
+  /users/logout:
+    delete:
+      tags: [User]
+      summary: Logout from session
+      responses:
+        "200":
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+                    example: OK
+        "401":
+          $ref: "#/components/responses/ErrorResponse"
+
+  /pets:
+    post:
+      tags: [Pet]
+      summary: Create a new pet
+      requestBody:
+        $ref: "#/components/requestBodies/CreatePetRequest"
+      responses:
+        "201":
+          description: Pet created successfully
+          $ref: "#/components/responses/PetResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+
+    get:
+      tags: [Pet]
+      summary: Search pets by filter
+      parameters:
+        - name: name
+          in: query
+          description: Pet name (partial match)
+          schema:
+            type: string
+        - name: species
+          in: query
+          description: Pet species
+          schema:
+            type: string
+        - name: breed
+          in: query
+          description: Pet breed
+          schema:
+            type: string
+        - name: birth_date
+          in: query
+          description: Pet birth date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: List of pets
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Pet"
+                    example:
+                      - id: 1
+                        name: doggy
+                        species: dog
+                        breed: husky
+                        birth_date: 2025-01-01
+                      - id: 2
+                        name: catty
+                        species: cat
+                        breed: persia
+                        birth_date: 2025-02-02
+                  paging:
+                    type: object
+                    properties:
+                      page:
+                        type: integer
+                        example: 1
+                      total_page:
+                        type: integer
+                        example: 2
+                      total_item:
+                        type: integer
+                        example: 4
+        "400":
+          description: Invalid request
+          $ref: "#/components/responses/ErrorResponse"
+
+  /pets/{id}:
+    get:
+      tags: [Pet]
+      summary: Get pet by ID
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/PetResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+    put:
+      tags: [Pet]
+      summary: Update pet by ID
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+      requestBody:
+        $ref: "#/components/requestBodies/CreatePetRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/PetResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+    delete:
+      tags: [Pet]
+      summary: Delete pet by ID
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+      responses:
+        "200":
+          description: Successfully deleted pet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+                    example: OK
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+
+  /pets/{id}/records:
+    post:
+      tags: [Pet Record]
+      summary: Create a new pet record
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+      requestBody:
+        $ref: "#/components/requestBodies/CreatePetRecordRequest"
+      responses:
+        "201":
+          $ref: "#/components/responses/PetRecordResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+
+    get:
+      tags: [Pet Record]
+      summary: Get all records for a pet
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+      responses:
+        "200":
+          description: List of pet records
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/PetRecord"
+                    example:
+                      - id: 1
+                        record_type: vaccination
+                        description: flu vaccination
+                        record_date: 2025-01-01
+                      - id: 2
+                        record_type: vacation
+                        description: trip to SG
+                        record_date: 2025-02-02
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+
+  /pets/{id}/records/{recordId}:
+    get:
+      tags: [Pet Record]
+      summary: Get pet record by ID
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+        - $ref: "#/components/parameters/PetRecordIdParam"
+      responses:
+        "200":
+          $ref: "#/components/responses/PetRecordResponse"
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+    put:
+      tags: [Pet Record]
+      summary: Update pet record
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+        - $ref: "#/components/parameters/PetRecordIdParam"
+      requestBody:
+        $ref: "#/components/requestBodies/CreatePetRecordRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/PetRecordResponse"
+        "400":
+          $ref: "#/components/responses/ErrorResponse"
+    delete:
+      tags: [Pet Record]
+      summary: Delete pet record
+      parameters:
+        - $ref: "#/components/parameters/PetIdParam"
+        - $ref: "#/components/parameters/PetRecordIdParam"
+      responses:
+        "200":
+          description: Successfully deleted pet record
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+                    example: OK
+        "404":
+          $ref: "#/components/responses/ErrorResponse"
+
+components:
+  parameters:
+    PetIdParam:
+      name: id
+      in: path
+      required: true
+      description: Pet ID
+      schema:
+        type: integer
+        example: 1
+    PetRecordIdParam:
+      name: recordId
+      in: path
+      required: true
+      description: Pet record ID
+      schema:
+        type: integer
+        example: 1
+
+  schemas:
+    User:
+      type: object
+      properties:
+        username:
+          type: string
+          example: john123
+        password:
+          type: string
+          example: password123
+        name:
+          type: string
+          example: John
+
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: doggy
+        species:
+          type: string
+          example: dog
+        breed:
+          type: string
+          example: husky
+        birth_date:
+          type: string
+          format: date
+          example: 2025-01-01
+
+    PetRecord:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        record_type:
+          type: string
+          example: vaccination
+        description:
+          type: string
+          example: flu vaccination
+        record_date:
+          type: string
+          format: date
+          example: 2025-01-01
+
+  requestBodies:
+    CreateUserRequest:
+      description: Request body for creating user
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/User"
+    LoginUserRequest:
+      description: Request body for login
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [username, password]
+            properties:
+              username:
+                type: string
+              password:
+                type: string
+    UpdateUserRequest:
+      description: Request body for updating user
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              name:
+                type: string
+              password:
+                type: string
+    CreatePetRequest:
+      description: Request body for creating or updating pet
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Pet"
+    CreatePetRecordRequest:
+      description: Request body for creating or updating pet record
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/PetRecord"
+
+  responses:
+    UserResponse:
+      description: User info response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/User"
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Invalid request
+    TokenResponse:
+      description: JWT token response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: unique-token
+    PetResponse:
+      description: Pet response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/Pet"
+    PetRecordResponse:
+      description: Pet record response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                $ref: "#/components/schemas/PetRecord"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
